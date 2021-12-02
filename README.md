@@ -1,15 +1,10 @@
-# 8퍼센트-subject
+# 프리온보딩 백엔드 과정 4번째 과제: 8퍼센트
 
-원티드x위코드 백엔드 프리온보딩 4번째 과제입니다.
+[8퍼센트](https://8percent.kr/)에서 제공해주신 API 설계 과제입니다. 헤로쿠를 이용해 배포했으며, 주소는 [https://eight-percent-subject.herokuapp.com](https://eight-percent-subject.herokuapp.com)입니다.
 
-## 제출 기업 정보
+## 과제에 대한 안내
 
-- 기업명 : 8퍼센트
-- 주요 서비스 사이트: [8퍼센트](https://8percent.kr/)
-
-## 과제 : 8퍼센트 계좌 거래 API 구현
-
-### [필수 요구 사항]
+1. 필수 요구 사항
 
 - 거래내역 조회 API
   - 계좌의 소유주만 요청 할 수 있어야 합니다.
@@ -28,147 +23,194 @@
   - 계좌의 소유주만 요청 할 수 있어야 합니다.
   - 계좌의 잔액내에서만 출금 할 수 있어야 합니다. 잔액을 넘어선 출금 요청에 대해서는 적절한 에러처리가 되어야 합니다.
 
-### [개발 요구사항]
+2. 개발 요구사항
 
-**주요 고려 사항은 다음과 같습니다.**
+- 계좌의 잔액을 별도로 관리해야 하며, 계좌의 잔액과 거래내역의 잔액의 무결성을 보장해야 합니다.
+- DB를 설계 할때 각 칼럼의 타입과 제약을 고려해야 합니다.
+- 테스트의 편의성을 위해 mysql, postgresql 대신 sqllite를 사용해 주세요.
 
-- 계좌의 잔액을 별도로 관리해야 하며, 계좌의 잔액과 거래내역의 잔액의 무결성의 보장
-- DB를 설계 할때 각 칼럼의 타입과 제약
-
-**구현하지 않아도 되는 부분은 다음과 같습니다.**
-
-- 문제와 관련되지 않은 부가적인 정보. 예를 들어 사용자 테이블의 이메일, 주소, 성별 등
-- 프론트앤드 관련 부분
-
-**구현하지 않아도 되는 부분은 다음과 같습니다.**
-
-- (**8퍼센트가 직접 로컬에서 실행하여 테스트를 원하는 경우를 위해**) 테스트의 편의성을 위해 mysql, postgresql 대신 sqllite를 사용해 주세요.
-
-**가산점.**
+3. 가산점
 
 - Unit test의 구현
 - Functional Test 의 구현 (입금, 조회, 출금에 대한 시나리오 테스트)
 - 거래내역이 1억건을 넘어갈 때에 대한 고려
   - 이를 고려하여 어떤 설계를 추가하셨는지를 README에 남겨 주세요.
 
-### [평가 요소]
+## 데이터베이스 ERD
 
-- 주어진 요구사항에 대한 설계/구현 능력
-- 코드로 동료를 배려할 수 있는 구성 능력 (코드, 주석, README 등)
-
-## 조원
-
-| 이름         | 외부링크                                                                                                                                        | 담당 기능                                                               |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 이현준(조장) | [깃허브](https://github.com/lhj0621)/[블로그](https://supiz.tistory.com/)                                                                       | 총괄, 회원가입, 로그인, 로그인 인증, 로그아웃, 유닛 테스트, 헤로쿠 배포 |
-| 김태련       | [깃허브](https://github.com/nojamcode)/[블로그](https://velog.io/@code-link)                                                                    | 입금, 출금, 유닛테스트                                                  |
-| 신영학       | [깃허브](https://github.com/yhshin0)/[블로그](https://nbkw.tistory.com/)                                                                        | 계좌 CRUD, 유닛 테스트, functional test 작성                               |
-| 임유라       | [깃허브](https://github.com/BangleCoding)/[블로그](https://banglecoding.github.io/)                                                             | 거래내역 조회 쿼리, 거래내역 상세조회 기능 구현 테스트                  |
-| 이기범       | [깃허브](https://github.com/gibson-lee93)/[블로그](https://mysterious-laborer-518.notion.site/Gibson-s-Notion-2dd7f598fba64f1c9806cded5b4b83a0) | 계좌 CRUD, 유닛 테스트, README 작성                                     |
-| 정진산       | [깃허브](https://github.com/chinsanchung)/[블로그](https://chinsanchung.github.io/)                                                             | 거래내역 목록 조회, 거래내역 컨트롤러의 유닛 테스트                     |
+![데이터베이스 ERD](https://user-images.githubusercontent.com/57168321/141470315-48e1e5e7-0bc6-4e9e-ac77-54efc3bc2f7f.PNG)
 
 ## 개발 환경
 
 - 언어: TypeScript
-- 프레임워크: NestJs
 - 데이터베이스: SQLite3
-- 라이브러리: typeorm, passport, passport-jwt, bcrypt, class-validator, class-transformer, moment
-
-## ERD
-
-![8퍼센트 ERD](https://user-images.githubusercontent.com/57168321/141470315-48e1e5e7-0bc6-4e9e-ac77-54efc3bc2f7f.PNG)
-
-## 구현 기능
-
-### 회원가입
-
-- bcrypt의 단방향 암호화로 입력받은 비밀번호를 암호화하여 저장했습니다.
-- class-validator으로 입력 값의 유효성을 검사해 회원가입에서 발생가능한 오류를 줄였습니다.
-- 유저 아이디 중복 체크를 통해 동일한 아이디로 가입을 하지 않도록 했습니다.
-
-### 로그인, 로그인 인증 및 로그아웃
-
-- passport 으로 로그인 과정에서 보안을 유지합니다.
-- 로그인 성공 시 유저 인증을 위한 JWT(Json Web Token)이 발급됩니다.
-- 로그인 시간을 유저의 DB에 기록하는 동시에 JWT 토큰에 저장합니다. 이 정보는 API 호출 시 이전 로그인 시간과 값을 비교하여 토큰의 유효성을 검증하는데 사용합니다.
-- 유저 DB 의 로그인 시간을 null 값으로 갱신하여 로그아웃을 수행합니다. 또한 로그인 시 발급받은 토큰을 만료시킵니다.
-
-### 계좌
-
-- 계좌의 CRUD를 구현했습니다. API를 수행하기 전에 로그인했는지 확인합니다.
-- 계좌에 대한 CRUD 동작은 계좌의 소유주인지 확인을 한 후에 실행할 수 있도록 처리하였습니다.
-- 계좌 전체 조회 시 해당 유저의 계좌 목록을 출력합니다.
-- 계좌 상세 조회할 경우 해당 유저의 특정 계좌만 출력합니다.
-- 입금 또는 출금이 있으면 계좌 수정을 통해 계좌의 보유 금액을 업데이트합니다.
-- typeorm 의 softDelete 메소드를 이용해 데이터를 실제로 삭제하지 않도록 구현했습니다.
-
-### 입금, 출금
-
-- 입금과 출금 기능을 구현 했습니다.
-- 입금과 출금을 하기전에 jwt로 인증을 하고, 해당 유저의 계좌인지 확인합니다.
-- 출금은 해당 계좌의 잔액보다 많이 출금 할 수 없습니다.
-- 입금과 출금은 transaction 처리로 중간에 에러가 나면 모든 처리가 롤백됩니다.
-
-### 거래내역
-
-- 거래내역의 목록, 그리고 한 개의 거래내역을 조회하는 기능을 작성했습니다.
-- 거래내역을 조회할 때, JWT를 이용하여 해당 계좌가 로그인 유저의 계좌와 일치하는지 확인합니다.
-- 목록은 1페이지에 다섯 항목을 보여주며, 요청을 위한 쿼리는 다음과 같습니다.
-  - acc_num: 계좌번호를 입력합니다. 필수로 입력하는 값입니다.
-  - startDate: 거래일시의 시작을 입력합니다. `YYYY-MM-DD` 형식으로 작성합니다. 만약 이 값을 입력하지 않는다면 "오늘을 기준으로 3개월 전"으로 설정합니다.
-  - endDate: 거래일시의 끝을 입력합니다. 시작일과 동일하게 `YYYY-MM-DD` 형식으로 작성합니다. 생략할 경우 기본값인 "오늘 날짜의 23시 59분 59초"로 설정합니다.
-  - page: 페이지 번호를 입력합니다. 1페이지부터 시작합니다.
-  - trans_type: 거래의 종류입니다. "in"은 입금, "out"은 출금입니다. 이 값을 생략할 경우 입금과 출력 모두를 출력합니다.
-- 목록을 조회할 때 [moment-timezone](https://momentjs.com/timezone/)을 이용해 시간대를 서울으로 고정하고, 날짜를 지정한 형식의 문자열로 출력하거나 날짜를 계산할 때 사용했습니다.
-- 각 거래내역의 아이디를 통해 해당 거래에 대한 내역을 조회할 수 있습니다.
+- 사용 도구: NestJs, typeorm, passport, passport-jwt, bcrypt, class-validator, class-transformer, moment-timezone
 
 ## API 문서
 
-<!-- TODO -->
-
-API 테스트를 위한 방법을 [POSTMAN document](https://documenter.getpostman.com/view/15323948/UVC8CRnQ)에서 확인하실 수 있습니다.
-
-## 배포
-
-<!-- TODO -->
-
-Heroku를 이용해 배포를 진행했으며, 사이트의 주소는 [https://eight-percent-subject.herokuapp.com/](https://eight-percent-subject.herokuapp.com/) 입니다.
-
-## 설치 및 실행 방법
-
-### 공통
-
-1. 최상위 폴더에 `.env` 파일에 `JWT_SECRET`에 임의의 문자열을 작성해 저장합니다.
-1. `npm install`으로 패키지를 설치합니다.
-1. 테스트
-   - 개발일 경우: `npm run start`으로 `localhost:3000`에서 테스트하실 수 있습니다.
-   - 배포일 경우: `npm run build`으로 애플리케이션을 빌드합니다. 그리고 `npm run start:prod`으로 실행합니다.
-1. POST `localhost:3000/users`에서 `user_id`, `password`를 입력해 유저를 생성합니다.
-1. POST `localhost:3000/users/signin`에 `user_id`, `password`을 입력하신 후 결과값으로 accessToken을 발급받습니다.
-1. 계좌 생성, 입금, 출금 등 권한이 필요한 API의 주소를 입력한 후, Headers 의 Authorization에 accessToken을 붙여넣어 권한을 얻은 후 API를 호출합니다.
-
-## 테스트
-![image](https://user-images.githubusercontent.com/42320464/141520789-1c50e86c-2851-4982-864f-ba7927e24dc1.png)
-
+포스트맨으로 작성한 [API 문서](https://documenter.getpostman.com/view/15323948/UVC8CRnQ)에서 상세한 내용을 확인하실 수 있습니다.
 
 ## Functional test
-[Functional test](https://github.com/wanted-wecode-subjects/eight-percent-subject/wiki/functional-test)
 
-## 거래내역이 1억 건을 넘어갈 때에 대한 고려
-### 인덱싱
-- 거래내역(Transaction) 테이블의 trans_type 칼럼에 인덱싱을 부여하였습니다. 해당 칼럼은 입금과 출금의 타입을 저장하는 칼럼으로 다른 칼럼의 비해 카디널리티가 더 높습니다.
+회원가입, 로그인, 계좌 생성, 입금, 출금, 그리고 거래 내역을 조회하는 과정을 [Functional test](https://github.com/wanted-wecode-subjects/eight-percent-subject/wiki/functional-test)에 작성했습니다.
 
-### (미구현) 파티션 테이블
-- 거래내역을 한 테이블에 저장하지 않고 테이블 1, 테이블 2, 테이블 3 와 같이 분산하여 저장하는 방식입니다. 거래 방식 / 월단위 / 10000개씩 끊기 등이 있지만 너무 많은 파티션은 DB의 급격한 사용 시 부하가 발생할 수 있습니다.
+## 실행 방법
 
-### (미구현) 페이징 LIMIT 외에 조회 범위 제한
-- 페이징를 하더라도 단순 LIMIT와 OFFSET 처리만 한다면 뒤로 갈수록 점점 느려질 수 있습니다. 그 이유는 ```LIMIT 50000 OFFSET 0``` 와 ```LIMIT 50000 OFFSET 50000```의 차이에서 있습니다. 전자는 처음부터 5만 개의 데이터를 가져오지만 후자는 5만 개 이후 5만 1번째부터 10만 개까지의 데이터를 불러옵니다.
-- 거래내역(Transaction)의 경우 테이블의 값이 삭제될 일이 없으므로 PK 값을 조건에 추가한다면 페이징의 성능을 향상시킬 수 있습니다.
-- 천 개씩 조회하고 7페이지라고 가정했을 때 ```where id > 7000 LIMIT 1000 OFFSET 6000 ```와 같이 where 절을 추가합니다.
+1. `git clone` 으로 프로젝트를 가져온 후, `npm install` 으로 필요한 패키지를 설치합니다.
+2. 루트 디렉토리에 .env 파일을 생성하고, 임의의 문자열 값을 가진 `JWT_SECRET`을 작성합니다.
+3. 개발 환경일 때는`npm run start:dev`으로, 배포 환경일 때는 `npm run build`으로 빌드한 후 `npm run start:prod`을 입력하시면 로컬에서 테스트하실 수 있습니다.
+4. POST `localhost:3000/users`에서 `user_id`, `password`를 입력해 유저를 생성합니다.
+5. POST `localhost:3000/users/signin`에 `user_id`, `password`을 입력하신 후 결과값으로 accessToken을 발급받습니다.
+6. 계좌 생성, 입금, 출금 등 권한이 필요한 API의 주소를 입력한 후, Headers 의 Authorization에 accessToken을 붙여넣어 권한을 얻은 후 API를 호출합니다.
 
+## 수행한 작업
+
+### 거래내역 목록 조회
+
+조회 기능을 위해선 로그인이 필요하며 pagination 으로 한 번에 5개씩 출력합니다.
+
+URI 쿼리를 다음과 같이 입력하셔야 합니다.
+
+- acc_num: 계좌번호를 입력합니다. 필수로 입력하는 값입니다.
+- startDate: 거래일시의 시작을 입력합니다. `YYYY-MM-DD` 형식으로 작성합니다. 만약 이 값을 입력하지 않는다면 "오늘을 기준으로 3개월 전"으로 설정합니다.
+- endDate: 거래일시의 끝을 입력합니다. 시작일과 동일하게 `YYYY-MM-DD` 형식으로 작성합니다. 생략할 경우 기본값인 "오늘 날짜의 23시 59분 59초"로 설정합니다.
+- page: 페이지 번호를 입력합니다. 1페이지부터 시작합니다.
+- trans_type: 거래의 종류입니다. "in"은 입금, "out"은 출금입니다. 이 값을 생략할 경우 입금과 출력 모두를 출력합니다.
+
+우선 [transaction.service.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.service.ts)에서는 계좌의 소유주인지 여부를 확인하고, 일치하면 다음 과정으로 넘어갑니다.
+
+```typescript
+// transaction.service.ts
+async function getAllTransactions(
+  query: ListWithPageAndUserOptions
+): Promise<Transaction[]> {
+  // * 계좌의 소유주인지 여부를 확인합니다.
+  const account = await this.accountRepository.findOne({
+    where: { acc_num: query.acc_num },
+    join: {
+      alias: 'account',
+      leftJoinAndSelect: { user: 'account.user' },
+    },
+  });
+  if (!account) {
+    throw new BadRequestException(
+      '거래 내역에 등록한 계좌가 존재하지 않습니다.'
+    );
+  }
+  if (account.user.user_id !== query.user.user_id) {
+    throw new NotAcceptableException(
+      '오직 계좌의 소유주만 해당 계좌의 거래 내역을 조회하실 수 있습니다.'
+    );
+  }
+  const result = this.transactionRepository.getAllTransactions(query);
+  return result;
+}
+```
+
+다음은 [transaction.repository.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.repository.ts)에서 데이터베이스에 접근해 목록을 추춣합니다. 레포지토리를 따로 만든 이유는 복잡한 데이터베이스 쿼리로 인해 코드가 길어질 경우 따로 파일을 만들어서 관리하자는 합의가 있었기 떄문입니다.
+
+```typescript
+function getDatePeriod(
+  startDate: string | undefined,
+  endDate: string | undefined
+): [string, string] {
+  // * 처음과 마지막을 쿼리로 전달하지 않을 경우, 3개월 전부터 오늘까지를 기준으로 정합니다.
+  // moment-timezone: 서울 시간을 기준으로 하고, 3개월 전을 계산하기 위해 사용합니다.
+  let startDateString = '';
+  let endDateString = '';
+  if (startDate) {
+    startDateString = `${startDate} 00:00:00`;
+  } else {
+    startDateString = moment()
+      .tz('Asia/Seoul')
+      .add(-3, 'month')
+      .set({ hour: 0, minute: 0, second: 0 })
+      .format('YYYY-MM-DD HH:mm:ss');
+  }
+  if (endDate) {
+    endDateString = `${endDate} 23:59:59`;
+  } else {
+    endDateString = moment()
+      .tz('Asia/Seoul')
+      .set({ hour: 23, minute: 59, second: 59 })
+      .format('YYYY-MM-DD HH:mm:ss');
+  }
+  return [startDateString, endDateString];
+}
+```
+
+[moment-timezone](https://momentjs.com/timezone/)으로 시간대를 서울으로 지정하고, 날짜 쿼리를 입력하지 않았을 경우의 시간 계산을 수행했습니다. 예전에 AWS Beanstalk 로 배포한 애플리케이션에서 `new Date()`를 실행할 때 9시간을 앞당겨서 계산했기에, 헤로쿠로 배포할 때도 이러한 에러가 발생할 가능성이 있다고 판단해 이러한 방법을 선택했습니다.
+
+```typescript
+async function getAllTransactions({
+  limit,
+  offset,
+  trans_type,
+  startDate,
+  endDate,
+  acc_num,
+}: ListWithPageAndUserOptions): Promise<Transaction[]> {
+  // * 거래일시에 대한 필터링을 수행합니다. 처음과 끝 날짜를 계산하여 문자열 형식으로 반환합니다.
+  const [startDateString, endDateString] = this.getDatePeriod(
+    startDate,
+    endDate
+  );
+  // * 입금, 출금 필터링. 1. 입금, 2. 출금, 3. 입출금 으로 구분합니다.
+  let transTypeQuery: any = [
+    'transaction.trans_type = :trans_type',
+    { trans_type },
+  ];
+  if (!trans_type) {
+    transTypeQuery = [
+      'transaction.trans_type IN (:...trans_type)',
+      { trans_type: ['in', 'out'] },
+    ];
+  }
+  const transaction = await this.createQueryBuilder('transaction')
+    .leftJoinAndSelect('transaction.account', 'account')
+    .where('account.acc_num = :acc_num', { acc_num })
+    .andWhere('transaction.createdAt >= :startDate', {
+      startDate: startDateString,
+    })
+    .andWhere('transaction.createdAt <= :endDate', {
+      endDate: endDateString,
+    })
+    .andWhere(transTypeQuery[0], transTypeQuery[1])
+    .limit(limit) // * Pagination 기능
+    .offset(offset) // * Pagination 기능
+    .select([
+      'transaction.id',
+      'transaction.createdAt',
+      'transaction.amount',
+      'transaction.balance',
+      'transaction.trans_type',
+      'transaction.comments',
+    ])
+    .getMany();
+  // * select 로 특정 컬럼만 응답에 포함합니다. [거래일시, 거래금액, 잔액, 거래종류, 적요]
+  return transaction;
+}
+```
+
+### 특정 거래내역 조회
+
+거래내역의 id 를 URI 파라미터로 받아 특정 거래내역을 조회합니다. 거래내역의 작성자인지 여부를 확인하기 위해 로그인이 필요합니다.
+
+`findOne` 메소드를 이용해 데이터를 추출하며, 거래를 수행한 계좌의 정보를 같이 출력하기 위해 [엔티티](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/entities/transaction.entity.ts)에서 계좌 컬럼의 eager 를 true 로 지정했습니다. 그러면 거래내역을 `find` 또는 `findOne`으로 조회할 때 계좌에 대한 정보도 같이 보여줄 수 있습니다.
+
+```typescript
+export class Transaction {
+  @ManyToOne((_type) => Account, (account) => account.transactions, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  account: Account;
+}
+```
 
 ## 폴더 구조
-```bash
+
+```
 |   .eslintrc.js
 |   .gitignore
 |   .prettierrc
@@ -255,5 +297,4 @@ Heroku를 이용해 배포를 진행했으며, 사이트의 주소는 [https://e
 |-  README.md
 |-  tsconfig.build.json
 |-  tsconfig.json
-
 ```
