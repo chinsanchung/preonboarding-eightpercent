@@ -107,7 +107,7 @@ async function getAllTransactions(
 }
 ```
 
-다음은 [transaction.repository.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.repository.ts)에서 데이터베이스에 접근해 목록을 추춣합니다. 레포지토리를 따로 만든 이유는 복잡한 데이터베이스 쿼리로 인해 코드가 길어질 경우 따로 파일을 만들어서 관리하자는 합의가 있었기 떄문입니다.
+다음은 [transaction.repository.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.repository.ts)에서 데이터베이스에 접근해 목록을 추출합니다. 레포지토리를 따로 만든 이유는 복잡한 데이터베이스 쿼리로 인해 코드가 길어질 경우 따로 파일을 만들어서 관리하기로 팀원과 협의해서입니다.
 
 ```typescript
 function getDatePeriod(
