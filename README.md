@@ -44,7 +44,7 @@
 
 - 언어: TypeScript
 - 데이터베이스: SQLite3
-- 사용 도구: NestJs, typeorm, passport, passport-jwt, bcrypt, class-validator, class-transformer, moment-timezone
+- 사용 도구: NestJs, typeorm, passport, passport-jwt, bcrypt, class-validator, class-transformer, date-fns
 
 ## API 문서
 
@@ -82,7 +82,7 @@ URI 쿼리를 다음과 같이 입력하셔야 합니다.
 ```typescript
 // transaction.service.ts
 async function getAllTransactions(
-  query: ListWithPageAndUserOptions
+  query: ListWithPageAndUserOptions,
 ): Promise<Transaction[]> {
   // * 계좌의 소유주인지 여부를 확인합니다.
   const account = await this.accountRepository.findOne({
@@ -94,12 +94,12 @@ async function getAllTransactions(
   });
   if (!account) {
     throw new BadRequestException(
-      '거래 내역에 등록한 계좌가 존재하지 않습니다.'
+      '거래 내역에 등록한 계좌가 존재하지 않습니다.',
     );
   }
   if (account.user.user_id !== query.user.user_id) {
     throw new NotAcceptableException(
-      '오직 계좌의 소유주만 해당 계좌의 거래 내역을 조회하실 수 있습니다.'
+      '오직 계좌의 소유주만 해당 계좌의 거래 내역을 조회하실 수 있습니다.',
     );
   }
   const result = this.transactionRepository.getAllTransactions(query);
@@ -112,34 +112,46 @@ async function getAllTransactions(
 ```typescript
 function getDatePeriod(
   startDate: string | undefined,
-  endDate: string | undefined
+  endDate: string | undefined,
 ): [string, string] {
   // * 처음과 마지막을 쿼리로 전달하지 않을 경우, 3개월 전부터 오늘까지를 기준으로 정합니다.
-  // moment-timezone: 서울 시간을 기준으로 하고, 3개월 전을 계산하기 위해 사용합니다.
   let startDateString = '';
   let endDateString = '';
+  const UTCZeroToday = subHours(
+    set(new Date(), {
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    }),
+    9,
+  );
   if (startDate) {
     startDateString = `${startDate} 00:00:00`;
   } else {
-    startDateString = moment()
-      .tz('Asia/Seoul')
-      .add(-3, 'month')
-      .set({ hour: 0, minute: 0, second: 0 })
-      .format('YYYY-MM-DD HH:mm:ss');
+    startDateString = format(subMonths(UTCZeroToday, 3), 'yyyy-MM-dd HH:mm:ss');
   }
   if (endDate) {
     endDateString = `${endDate} 23:59:59`;
   } else {
-    endDateString = moment()
-      .tz('Asia/Seoul')
-      .set({ hour: 23, minute: 59, second: 59 })
-      .format('YYYY-MM-DD HH:mm:ss');
+    const endDate = add(UTCZeroToday, {
+      hours: 23,
+      minutes: 59,
+      seconds: 59,
+    });
+    endDateString = format(endDate, 'yyyy-MM-dd HH:mm:ss');
   }
   return [startDateString, endDateString];
 }
 ```
 
-[moment-timezone](https://momentjs.com/timezone/)으로 시간대를 서울으로 지정하고, 날짜 쿼리를 입력하지 않았을 경우의 시간 계산을 수행했습니다. 예전에 AWS Beanstalk 로 배포한 애플리케이션에서 `new Date()`를 실행할 때 9시간을 앞당겨서 계산했기에, 헤로쿠로 배포할 때도 이러한 에러가 발생할 가능성이 있다고 판단해 이러한 방법을 선택했습니다.
+날짜 쿼리 startDate, endDate 를 입력하지 않았을 경우, 3개월 이전 ~ 오늘까지의 거래 내역을 조회합니다. 3개월 이전을 계산하기 위해 [date-fns](https://date-fns.org/)으로 시간을 계산했습니다.
+
+- 1. SQLite3 은 UTC+0 시간대를 기준으로 잡고 있습니다. 그에 맞춰 `UTCZeroToday` 변수의 값을 UTC+0 시간대로 변환한 오늘 날짜로 하고, 0시 0분 0초로 설정합니다.
+- 2. `UTCZeroToday`을 이용해 3개월 전의 날짜를 구하고 `format` 함수로 'yyyy-MM-dd HH:mm:ss' 형식의 문자열로 변환합니다.
+- 3. 마찬가지로, `UTCZeroToday`에 23시 59분 59초를 더해 오늘의 마지막 시간으로 설정한 후, 문자열로 변환합니다.
+
+거래 내역의 기간을 계산한 후, 입금과 출금 필터링을 추가하여 `createQueryBuilder` 메소드를 이용해 거래 내역의 목록을 조회합니다.
 
 ```typescript
 async function getAllTransactions({
@@ -153,7 +165,7 @@ async function getAllTransactions({
   // * 거래일시에 대한 필터링을 수행합니다. 처음과 끝 날짜를 계산하여 문자열 형식으로 반환합니다.
   const [startDateString, endDateString] = this.getDatePeriod(
     startDate,
-    endDate
+    endDate,
   );
   // * 입금, 출금 필터링. 1. 입금, 2. 출금, 3. 입출금 으로 구분합니다.
   let transTypeQuery: any = [
@@ -207,6 +219,16 @@ export class Transaction {
   account: Account;
 }
 ```
+
+## 리팩토링
+
+### 시간 계산을 수행하는 방식 변경
+
+[transaction.repository.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.repository.ts)의 `getDatePeriod`을 리팩토링한 것으로, 거래 내역의 목록을 조회할 때 시간을 계산하는 방식을 [moment-timezone](https://www.npmjs.com/package/moment-timezone) 대신 [date-fns](https://www.npmjs.com/package/date-fns)으로 수정했습니다.
+
+- 이유 1: momentjs 는 날짜를 계산하려면 인스턴스를 만들어야하는데, 즉 불필요한 함수까지 전부 가져와 애플리케이션을 빌드했을 때 용량이 커집니다. 반면 date-fns 는 필요한 함수만을 따로 가져와 사용할 수 있어 빌드했을 떄의 용량을 줄일 수 있습니다.
+- 이유 2: momentjs 에서 인스턴스를 생성하여 계산하는 과정에서 date-fns 보다 많은 시간을 소요합니다.
+- 위의 글은 [momentjs vs date-fns](https://medium.com/@k2u4yt/momentjs-vs-date-fns-6bddc7bfa21e)을 참고했습니다.
 
 ## 폴더 구조
 

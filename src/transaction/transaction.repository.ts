@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+import { add, format, set, subHours, subMonths } from 'date-fns';
 import { EntityRepository, Repository } from 'typeorm';
-import * as moment from 'moment-timezone';
 import { Transaction } from './entities/transaction.entity';
 import { ListWithPageAndUserOptions } from './transaction.interface';
 
@@ -11,25 +11,34 @@ export class TransactionRepository extends Repository<Transaction> {
     endDate: string | undefined,
   ): [string, string] {
     // * 처음과 마지막을 쿼리로 전달하지 않을 경우, 3개월 전부터 오늘까지를 기준으로 정합니다.
-    // moment-timezone: 서울 시간을 기준으로 하고, 3개월 전을 계산하기 위해 사용합니다.
     let startDateString = '';
     let endDateString = '';
+    const UTCZeroToday = subHours(
+      set(new Date(), {
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+      }),
+      9,
+    );
     if (startDate) {
       startDateString = `${startDate} 00:00:00`;
     } else {
-      startDateString = moment()
-        .tz('Asia/Seoul')
-        .add(-3, 'month')
-        .set({ hour: 0, minute: 0, second: 0 })
-        .format('YYYY-MM-DD HH:mm:ss');
+      startDateString = format(
+        subMonths(UTCZeroToday, 3),
+        'yyyy-MM-dd HH:mm:ss',
+      );
     }
     if (endDate) {
       endDateString = `${endDate} 23:59:59`;
     } else {
-      endDateString = moment()
-        .tz('Asia/Seoul')
-        .set({ hour: 23, minute: 59, second: 59 })
-        .format('YYYY-MM-DD HH:mm:ss');
+      const endDate = add(UTCZeroToday, {
+        hours: 23,
+        minutes: 59,
+        seconds: 59,
+      });
+      endDateString = format(endDate, 'yyyy-MM-dd HH:mm:ss');
     }
     return [startDateString, endDateString];
   }
