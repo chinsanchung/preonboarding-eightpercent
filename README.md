@@ -82,7 +82,7 @@ URI 쿼리를 다음과 같이 입력하셔야 합니다.
 ```typescript
 // transaction.service.ts
 async function getAllTransactions(
-  query: ListWithPageAndUserOptions,
+  query: ListServiceOptions,
 ): Promise<Transaction[]> {
   // * 계좌의 소유주인지 여부를 확인합니다.
   const account = await this.accountRepository.findOne({
@@ -102,7 +102,10 @@ async function getAllTransactions(
       '오직 계좌의 소유주만 해당 계좌의 거래 내역을 조회하실 수 있습니다.',
     );
   }
-  const result = this.transactionRepository.getAllTransactions(query);
+  const result = this.transactionRepository.getAllTransactions({
+    ...query,
+    nodeEnv: this.configService.get('NODE_ENV'),
+  });
   return result;
 }
 ```
@@ -110,22 +113,27 @@ async function getAllTransactions(
 다음은 [transaction.repository.ts](https://github.com/chinsanchung/preonboarding-eightpercent/blob/master/src/transaction/transaction.repository.ts)에서 데이터베이스에 접근해 목록을 추출합니다. 레포지토리를 따로 만든 이유는 복잡한 데이터베이스 쿼리로 인해 코드가 길어질 경우 따로 파일을 만들어서 관리하기로 팀원과 협의해서입니다.
 
 ```typescript
-function getDatePeriod(
-  startDate: string | undefined,
-  endDate: string | undefined,
-): [string, string] {
+function getDatePeriod({
+  startDate,
+  endDate,
+  nodeEnv,
+}: {
+  startDate: string | undefined;
+  endDate: string | undefined;
+  nodeEnv: 'production' | undefined;
+}): [string, string] {
   // * 처음과 마지막을 쿼리로 전달하지 않을 경우, 3개월 전부터 오늘까지를 기준으로 정합니다.
   let startDateString = '';
   let endDateString = '';
-  const UTCZeroToday = subHours(
-    set(new Date(), {
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-      milliseconds: 0,
-    }),
-    9,
-  );
+  let UTCZeroToday: Date = set(new Date(), {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    milliseconds: 0,
+  });
+  if (nodeEnv !== 'production') {
+    UTCZeroToday = subHours(UTCZeroToday, 9);
+  }
   if (startDate) {
     startDateString = `${startDate} 00:00:00`;
   } else {
@@ -147,9 +155,9 @@ function getDatePeriod(
 
 날짜 쿼리 startDate, endDate 를 입력하지 않았을 경우, 3개월 이전 ~ 오늘까지의 거래 내역을 조회합니다. 3개월 이전을 계산하기 위해 [date-fns](https://date-fns.org/)으로 시간을 계산했습니다.
 
-- 1. SQLite3 은 UTC+0 시간대를 기준으로 잡고 있습니다. 그에 맞춰 `UTCZeroToday` 변수의 값을 UTC+0 시간대로 변환한 오늘 날짜로 하고, 0시 0분 0초로 설정합니다.
-- 2. `UTCZeroToday`을 이용해 3개월 전의 날짜를 구하고 `format` 함수로 'yyyy-MM-dd HH:mm:ss' 형식의 문자열로 변환합니다.
-- 3. 마찬가지로, `UTCZeroToday`에 23시 59분 59초를 더해 오늘의 마지막 시간으로 설정한 후, 문자열로 변환합니다.
+- SQLite3 은 UTC+0 시간대를 기준으로 잡고 있습니다. 그에 맞춰 (로컬 개발 모드일 경우) `UTCZeroToday`를 UTC+0 시간대로 변환합니다. 헤로쿠로 배포했을 경우 UTC+0 시간대를 적용하기에 따로 변환하지 않습니다.
+- `UTCZeroToday`으로 3개월 전의 날짜를 구하고 `format` 함수로 'yyyy-MM-dd HH:mm:ss' 형식의 문자열로 변환합니다.
+- 마찬가지로, `UTCZeroToday`에 23시 59분 59초를 더해 오늘의 마지막 시간으로 설정한 후, 문자열로 변환합니다.
 
 거래 내역의 기간을 계산한 후, 입금과 출금 필터링을 추가하여 `createQueryBuilder` 메소드를 이용해 거래 내역의 목록을 조회합니다.
 
@@ -161,12 +169,14 @@ async function getAllTransactions({
   startDate,
   endDate,
   acc_num,
-}: ListWithPageAndUserOptions): Promise<Transaction[]> {
+  nodeEnv,
+}: ListRepositoryOptions): Promise<Transaction[]> {
   // * 거래일시에 대한 필터링을 수행합니다. 처음과 끝 날짜를 계산하여 문자열 형식으로 반환합니다.
-  const [startDateString, endDateString] = this.getDatePeriod(
+  const [startDateString, endDateString] = this.getDatePeriod({
     startDate,
     endDate,
-  );
+    nodeEnv,
+  });
   // * 입금, 출금 필터링. 1. 입금, 2. 출금, 3. 입출금 으로 구분합니다.
   let transTypeQuery: any = [
     'transaction.trans_type = :trans_type',
