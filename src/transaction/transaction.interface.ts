@@ -8,8 +8,12 @@ export interface ListQueryOptions {
   endDate?: string;
 }
 
-export interface ListWithPageAndUserOptions extends ListQueryOptions {
+export interface ListServiceOptions extends ListQueryOptions {
   user?: User;
   limit: number;
   offset: number;
+}
+
+export interface ListRepositoryOptions extends ListServiceOptions {
+  nodeEnv: 'production' | undefined;
 }
