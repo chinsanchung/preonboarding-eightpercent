@@ -2,26 +2,31 @@ import { BadRequestException } from '@nestjs/common';
 import { add, format, set, subHours, subMonths } from 'date-fns';
 import { EntityRepository, Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
-import { ListWithPageAndUserOptions } from './transaction.interface';
+import { ListRepositoryOptions } from './transaction.interface';
 
 @EntityRepository(Transaction)
 export class TransactionRepository extends Repository<Transaction> {
-  private getDatePeriod(
-    startDate: string | undefined,
-    endDate: string | undefined,
-  ): [string, string] {
+  private getDatePeriod({
+    startDate,
+    endDate,
+    nodeEnv,
+  }: {
+    startDate: string | undefined;
+    endDate: string | undefined;
+    nodeEnv: 'production' | undefined;
+  }): [string, string] {
     // * 처음과 마지막을 쿼리로 전달하지 않을 경우, 3개월 전부터 오늘까지를 기준으로 정합니다.
     let startDateString = '';
     let endDateString = '';
-    const UTCZeroToday = subHours(
-      set(new Date(), {
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        milliseconds: 0,
-      }),
-      9,
-    );
+    let UTCZeroToday: Date = set(new Date(), {
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    });
+    if (nodeEnv !== 'production') {
+      UTCZeroToday = subHours(UTCZeroToday, 9);
+    }
     if (startDate) {
       startDateString = `${startDate} 00:00:00`;
     } else {
@@ -49,12 +54,14 @@ export class TransactionRepository extends Repository<Transaction> {
     startDate,
     endDate,
     acc_num,
-  }: ListWithPageAndUserOptions): Promise<Transaction[]> {
+    nodeEnv,
+  }: ListRepositoryOptions): Promise<Transaction[]> {
     // * 거래일시에 대한 필터링을 수행합니다. 처음과 끝 날짜를 계산하여 문자열 형식으로 반환합니다.
-    const [startDateString, endDateString] = this.getDatePeriod(
+    const [startDateString, endDateString] = this.getDatePeriod({
       startDate,
       endDate,
-    );
+      nodeEnv,
+    });
     // * 입금, 출금 필터링. 1. 입금, 2. 출금, 3. 입출금 으로 구분합니다.
     let transTypeQuery: any = [
       'transaction.trans_type = :trans_type',
